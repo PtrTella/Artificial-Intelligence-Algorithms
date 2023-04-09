@@ -164,6 +164,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-m", "--manhattan", help="use manhattan distance", action="store_true")
     parser.add_argument("-2", "--second", help="second case with 20 move", action="store_true")
+    parser.add_argument("-3", "--third", help="third case with 31 move", action="store_true")
+    parser.add_argument("-4", "--fourth", help="fourth case with 31 move", action="store_true")
+    parser.add_argument("-5", "--fifth", help="fifth case with ? move", action="store_true")
+    parser.add_argument("-6", "--sixth", help="sixth case with ? move", action="store_true")
+
     args = parser.parse_args()
 
     if args.manhattan:
@@ -173,12 +178,25 @@ if __name__ == "__main__":
         print("\nUSING WRONG POSITION HEURISTIC")
         manhattan = False
 
-    if args.second == False:
-        print("\nUSING FIRST CASE")
-        first = NodeObj([[4, 1, 3], [7, 2, 6], [0, 5, 8]], 0)  # 6 moves
-    else:
+    if args.second:
         print("\nUSING SECOND CASE")
         first = NodeObj([[7, 2, 4], [5, 0, 6], [8, 3, 1]], 0) # 20 moves
+    elif args.third:
+        print("\nUSING THIRD CASE")
+        first = NodeObj([[2, 8, 1], [0, 4, 3], [7, 6, 5]], 0) # 31 moves
+    elif args.fourth:
+        print("\nUSING FOURTH CASE")
+        first = NodeObj([[5, 6, 7], [4, 0, 8], [3, 2, 1]], 0) # 31 moves
+    elif args.fifth:
+        print("\nUSING FIFTH CASE")
+        first = NodeObj([[6, 4, 7], [8, 5, 0], [3, 2, 1]], 0) # ? moves
+    elif args.sixth:
+        print("\nUSING SIXTH CASE")
+        first = NodeObj([[8, 6, 7], [2, 5, 4], [3, 0, 1]], 0) # ? moves 
+    else:
+        print("\nUSING FIRST CASE")
+        first = NodeObj([[4, 1, 3], [7, 2, 6], [0, 5, 8]], 0)  # 6 moves
+        
 
 
     AStar(first)
