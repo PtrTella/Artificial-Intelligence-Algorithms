@@ -1,19 +1,27 @@
 from copy import deepcopy
+import time
+import argparse
+
+manhattan = False
 
 class NodeObj:
 
     matrix = [[0 for i in range(3)] for j in range(3)]
+    parentNode = None
     gScore = None
     h1 = 0
-    
 
-    def __init__(self, values, gScore=None):
+    def __init__(self, values, gScore=None, parentNode=None):
         self.matrix = values
         self.gScore = gScore
-        self.setH1()
+        self.parentNode = parentNode
+        if (manhattan):
+            self.manhattan()
+        else:
+            self.wrongPosition()
 
 
-    def setH1(self):
+    def wrongPosition(self):
         x = 1
         for i in range(3):
             for j in range(3):
@@ -22,8 +30,19 @@ class NodeObj:
                 x += 1
         self.h1 *= 3
 
+    # Manhattan distance
+    def manhattan(self):
+        for i in range(3):
+            for j in range(3):
+                if self.matrix[i][j] != 0:
+                    self.h1 += abs(i - (self.matrix[i][j]-1)//3) + abs(j - (self.matrix[i][j]-1)%3)
+        #self.h1 *= 2
+
     def getGScore(self):
         return self.gScore
+    
+    def hasParent(self):
+        return self.parentNode != None
 
     def getMatrix(self):
         return self.matrix
@@ -35,23 +54,21 @@ class NodeObj:
         return self.h1
     
     def printNode(self):
-        print()
         for i in range(3):
             for j in range(3):
                 print(self.matrix[i][j], end=" ")
             print()
-        print()
-    
-
     
     def __eq__(self, other):
+        if other == None:
+            return False
+        
         for i in range(3):
             for j in range(3):
                 if self.matrix[i][j] != other.getMatrix()[i][j]:
                     return False
         return True
     
-
 
 
 def children(node):
@@ -63,51 +80,52 @@ def children(node):
                     newMatrix = deepcopy(node.getMatrix())
                     newMatrix[i][j] = newMatrix[i-1][j]
                     newMatrix[i-1][j] = 0
-                    children.append(NodeObj(newMatrix, node.getGScore()+1))
+                    children.append(NodeObj(newMatrix, node.getGScore()+1, node))
                 if i < 2:
                     newMatrix = deepcopy(node.getMatrix())
                     newMatrix[i][j] = newMatrix[i+1][j]
                     newMatrix[i+1][j] = 0
-                    children.append(NodeObj(newMatrix, node.getGScore()+1))
+                    children.append(NodeObj(newMatrix, node.getGScore()+1, node))
                 if j > 0:
                     newMatrix = deepcopy(node.getMatrix())
                     newMatrix[i][j] = newMatrix[i][j-1]
                     newMatrix[i][j-1] = 0
-                    children.append(NodeObj(newMatrix, node.getGScore()+1))
+                    children.append(NodeObj(newMatrix, node.getGScore()+1, node))
                 if j < 2:
                     newMatrix = deepcopy(node.getMatrix())
                     newMatrix[i][j] = newMatrix[i][j+1]
                     newMatrix[i][j+1] = 0
-                    children.append(NodeObj(newMatrix, node.getGScore()+1))                
+                    children.append(NodeObj(newMatrix, node.getGScore()+1, node))                
 
     return children
-    
 
-def AStar():
+
+def AStar(first):
 
     forntier = []
     explored = []
-
+    
     goal = NodeObj([[1, 2, 3], [4, 5, 6], [7, 8, 0]])
-    #first = NodeObj([[4, 1, 3], [7, 2, 6], [0, 5, 8]], 0)  # 6 moves
-    first = NodeObj([[7, 2, 4], [5, 0, 6], [8, 3, 1]], 0) # 20 moves
 
-    print("start from node:")
+    print("Start from node:")
     first.printNode()
 
     forntier.append(first)
 
-    print("A* algorithm is running...")
+    print("\nA* algorithm is running...")
+    start = time.time()
+
     while len(forntier) > 0:
             current = forntier.pop(0)
             explored.append(current)
+            
             if current == goal:
                 goal = current
-                print("\nGoal reached!\n")
+                print("\n=========================================")
+                print("Goal reached!")
                 print("Step needed to reach solution:", goal.getGScore())
-                goal.printNode()
+                print("=========================================\n")
                 break
-
             else:
                 for child in children(current):
                     if child not in explored:
@@ -121,24 +139,46 @@ def AStar():
                 
                 forntier.sort(key=lambda x: x.getFScore())
 
+    if goal.hasParent() == False:
+        print("No solution found")
+        return
+    
+    end = time.time()
+    print("Time needed to find solution:", end - start, "seconds")
 
-
-    r = input("\nTraceback? y/N")
-    if r == "y":
-        explored.sort(key=lambda x: x.getFScore())
-        path = explored[0 : goal.getGScore()]
-        path.sort(key=lambda x: x.getGScore(), reverse=True)
-
-        print("\ntraceback:")
-        for node in path :
-            node.printNode()
-            print("gScore:", node.getGScore())
-            if node == first:
-                break
-
+    r = input("\nTraceback? (Y/n): ")
+    if r != "n" and r != "N":
+        print()
+        while goal.hasParent():
+            goal.printNode()
+            print("move:", goal.getGScore(), "\n")
+            goal = goal.parentNode
+        goal.printNode()
+        print("starting node")
     
                
     
 
 if __name__ == "__main__":
-    AStar()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-m", "--manhattan", help="use manhattan distance", action="store_true")
+    parser.add_argument("-2", "--second", help="second case with 20 move", action="store_true")
+    args = parser.parse_args()
+
+    if args.manhattan:
+        print("\nUSING MANHATTAN DISTANCE AS HEURISTIC VALUE")
+        manhattan = True
+    else:
+        print("\nUSING WRONG POSITION HEURISTIC")
+        manhattan = False
+
+    if args.second == False:
+        print("\nUSING FIRST CASE")
+        first = NodeObj([[4, 1, 3], [7, 2, 6], [0, 5, 8]], 0)  # 6 moves
+    else:
+        print("\nUSING SECOND CASE")
+        first = NodeObj([[7, 2, 4], [5, 0, 6], [8, 3, 1]], 0) # 20 moves
+
+
+    AStar(first)
