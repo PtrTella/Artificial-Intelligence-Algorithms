@@ -1,46 +1,56 @@
 from copy import deepcopy
 import time
 import argparse
+import heapq
 
-manhattan = False
+MANHATTAN = False
+H_coefficient = 1
+G_coefficient = 1
+
+# wrong position heuristic
+def wrongPosition(matrix):
+    x = 1
+    heuristic = 0
+    for i in range(3):
+        for j in range(3):
+            if matrix[i][j] != x % 9:
+                heuristic += 1
+            x += 1
+    return heuristic
+
+# Manhattan distance
+def manhattan(matrix):
+    heuristic = 0
+    for i in range(3):
+        for j in range(3):
+            if matrix[i][j] != 0:
+                heuristic += abs(i - (matrix[i][j]-1)//3) + \
+                    abs(j - (matrix[i][j]-1) % 3)
+    return heuristic
+
+
 
 class NodeObj:
-
     matrix = [[0 for i in range(3)] for j in range(3)]
     parentNode = None
     gScore = None
-    h1 = 0
+    heuristic = 0
 
     def __init__(self, values, gScore=None, parentNode=None):
         self.matrix = values
         self.gScore = gScore
         self.parentNode = parentNode
-        if (manhattan):
-            self.manhattan()
+        if MANHATTAN:
+            self.heuristic = manhattan(self.matrix)
         else:
-            self.wrongPosition()
-
-
-    def wrongPosition(self):
-        x = 1
-        for i in range(3):
-            for j in range(3):
-                if self.matrix[i][j] != x%9:
-                    self.h1 += 1
-                x += 1
-        self.h1 *= 3
-
-    # Manhattan distance
-    def manhattan(self):
-        for i in range(3):
-            for j in range(3):
-                if self.matrix[i][j] != 0:
-                    self.h1 += abs(i - (self.matrix[i][j]-1)//3) + abs(j - (self.matrix[i][j]-1)%3)
-        #self.h1 *= 2
+            self.heuristic = wrongPosition(self.matrix)
 
     def getGScore(self):
         return self.gScore
     
+    def setGScore(self, gScore):
+        self.gScore = gScore
+
     def hasParent(self):
         return self.parentNode != None
 
@@ -48,10 +58,7 @@ class NodeObj:
         return self.matrix
     
     def getFScore(self):
-        return self.gScore + self.h1
-    
-    def getH1(self):
-        return self.h1
+        return self.heuristic*H_coefficient + self.gScore*G_coefficient
     
     def printNode(self):
         for i in range(3):
@@ -69,30 +76,37 @@ class NodeObj:
                     return False
         return True
     
+    def __lt__(self, other):
+        if self.getFScore() == other.getFScore():
+            return self.getGScore() < other.getGScore()
+        return self.getFScore() < other.getFScore()
+    
+
 
 
 def children(node):
     children = []
+    newNode = node.getMatrix()
     for i in range(3):
         for j in range(3):
-            if node.getMatrix()[i][j] == 0:
+            if newNode[i][j] == 0:
                 if i > 0:
-                    newMatrix = deepcopy(node.getMatrix())
+                    newMatrix = deepcopy(newNode)
                     newMatrix[i][j] = newMatrix[i-1][j]
                     newMatrix[i-1][j] = 0
                     children.append(NodeObj(newMatrix, node.getGScore()+1, node))
                 if i < 2:
-                    newMatrix = deepcopy(node.getMatrix())
+                    newMatrix = deepcopy(newNode)
                     newMatrix[i][j] = newMatrix[i+1][j]
                     newMatrix[i+1][j] = 0
                     children.append(NodeObj(newMatrix, node.getGScore()+1, node))
                 if j > 0:
-                    newMatrix = deepcopy(node.getMatrix())
+                    newMatrix = deepcopy(newNode)
                     newMatrix[i][j] = newMatrix[i][j-1]
                     newMatrix[i][j-1] = 0
                     children.append(NodeObj(newMatrix, node.getGScore()+1, node))
                 if j < 2:
-                    newMatrix = deepcopy(node.getMatrix())
+                    newMatrix = deepcopy(newNode)
                     newMatrix[i][j] = newMatrix[i][j+1]
                     newMatrix[i][j+1] = 0
                     children.append(NodeObj(newMatrix, node.getGScore()+1, node))                
@@ -100,44 +114,47 @@ def children(node):
     return children
 
 
+
+
 def AStar(first):
 
-    forntier = []
+    frontier = []
     explored = []
     
     goal = NodeObj([[1, 2, 3], [4, 5, 6], [7, 8, 0]])
 
-    print("Start from node:")
-    first.printNode()
-
-    forntier.append(first)
+    heapq.heappush(frontier, first)
 
     print("\nA* algorithm is running...")
     start = time.time()
 
-    while len(forntier) > 0:
-            current = forntier.pop(0)
+    while frontier:
+    
+            #frontier.sort()
+            current = heapq.heappop(frontier)
+            #current = frontier.pop(0)
             explored.append(current)
+            print("Node explored:", len(explored), "--- Time elapsed:", round(time.time() - start, 3), end="\r")
+            #current.printNode()
             
             if current == goal:
                 goal = current
-                print("\n=========================================")
+                print("\n\n=========================================")
                 print("Goal reached!")
                 print("Step needed to reach solution:", goal.getGScore())
                 print("=========================================\n")
                 break
             else:
                 for child in children(current):
-                    if child not in explored:
-                        forntier.append(child)
+                    if child not in explored and child not in frontier:
+                        heapq.heappush(frontier, child)
+
                     # if child in forntier:
                     #     for node in forntier:
                     #         if node == child:
                     #             if node.getGScore() > child.getGScore():
                     #                 node = child
                     #                 break
-                
-                forntier.sort(key=lambda x: x.getFScore())
 
     if goal.hasParent() == False:
         print("No solution found")
@@ -154,49 +171,54 @@ def AStar(first):
             print("move:", goal.getGScore(), "\n")
             goal = goal.parentNode
         goal.printNode()
-        print("starting node")
+        print("starting node")               
     
-               
-    
+
+
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-m", "--manhattan", help="use manhattan distance", action="store_true")
-    parser.add_argument("-2", "--second", help="second case with 20 move", action="store_true")
-    parser.add_argument("-3", "--third", help="third case with 31 move", action="store_true")
-    parser.add_argument("-4", "--fourth", help="fourth case with 31 move", action="store_true")
-    parser.add_argument("-5", "--fifth", help="fifth case with ? move", action="store_true")
-    parser.add_argument("-6", "--sixth", help="sixth case with ? move", action="store_true")
+    parser.add_argument("-t", "--test", help="select case text", type=int, default=0)
+    parser.add_argument("-hc", "--h_coefficient", help="set h coefficient", type=float, default=1)
 
     args = parser.parse_args()
 
     if args.manhattan:
         print("\nUSING MANHATTAN DISTANCE AS HEURISTIC VALUE")
-        manhattan = True
+        MANHATTAN = True
     else:
         print("\nUSING WRONG POSITION HEURISTIC")
-        manhattan = False
+        MANHATTAN = False
 
-    if args.second:
-        print("\nUSING SECOND CASE")
-        first = NodeObj([[7, 2, 4], [5, 0, 6], [8, 3, 1]], 0) # 20 moves
-    elif args.third:
-        print("\nUSING THIRD CASE")
-        first = NodeObj([[2, 8, 1], [0, 4, 3], [7, 6, 5]], 0) # 31 moves
-    elif args.fourth:
-        print("\nUSING FOURTH CASE")
-        first = NodeObj([[5, 6, 7], [4, 0, 8], [3, 2, 1]], 0) # 31 moves
-    elif args.fifth:
-        print("\nUSING FIFTH CASE")
-        first = NodeObj([[6, 4, 7], [8, 5, 0], [3, 2, 1]], 0) # ? moves
-    elif args.sixth:
-        print("\nUSING SIXTH CASE")
-        first = NodeObj([[8, 6, 7], [2, 5, 4], [3, 0, 1]], 0) # ? moves 
-    else:
-        print("\nUSING FIRST CASE")
-        first = NodeObj([[4, 1, 3], [7, 2, 6], [0, 5, 8]], 0)  # 6 moves
+    if args.h_coefficient != 1:
+        print("\nUSING H COEFFICIENT:", args.h_coefficient)
+        H_coefficient = args.h_coefficient
+
+    match args.test:
+        case 1:
+            print("\nUSING FIRST CASE")
+            first = NodeObj([[4, 1, 3], [7, 2, 6], [0, 5, 8]], 0) # 6 moves
+        case 2:
+            print("\nUSING SECOND CASE")
+            first = NodeObj([[7, 2, 4], [5, 0, 6], [8, 3, 1]], 0) # 20 moves
+        case 3:
+            print("\nUSING THIRD CASE")
+            first = NodeObj([[6, 4, 7], [8, 5, 0], [3, 2, 1]], 0) # 31 moves "Tabish"
+        case 4:
+            print("\nUSING FOURTH CASE")
+            first = NodeObj([[8, 6, 7], [2, 5, 4], [3, 0, 1]], 0) # 31 moves "Tabish"
+        case _:
+            print("\nUSING CUSTOM STARTING NODE")
+            matrix = input("Insert a starting node with spaces: ")
+            matrix = matrix.split()
+            matrix = [int(i) for i in matrix]
+            matrix = [matrix[i:i+3] for i in range(0, len(matrix), 3)]
+            first = NodeObj(matrix, 0) # 0 moves
         
+    #print("Start from node:")
+    first.printNode()
 
 
     AStar(first)
