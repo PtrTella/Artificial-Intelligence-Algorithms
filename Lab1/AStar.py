@@ -4,8 +4,19 @@ import argparse
 import heapq
 
 MANHATTAN = False
+WRONG_POSITION = False
+AVARAGE = False
+
 H_coefficient = 1
 G_coefficient = 1
+
+def calculateHeuristic(matrix):
+    if MANHATTAN:
+            return manhattan(matrix)
+    elif WRONG_POSITION:
+            return wrongPosition(matrix)
+    elif AVARAGE:
+            return (manhattan(matrix) + wrongPosition(matrix))/2
 
 # wrong position heuristic
 def wrongPosition(matrix):
@@ -40,10 +51,7 @@ class NodeObj:
         self.matrix = values
         self.gScore = gScore
         self.parentNode = parentNode
-        if MANHATTAN:
-            self.heuristic = manhattan(self.matrix)
-        else:
-            self.heuristic = wrongPosition(self.matrix)
+        self.heuristic = calculateHeuristic(values)
 
     def getGScore(self):
         return self.gScore
@@ -57,6 +65,9 @@ class NodeObj:
     def getMatrix(self):
         return self.matrix
     
+    def getHeuristic(self):
+        return self.heuristic
+    
     def getFScore(self):
         return self.heuristic*H_coefficient + self.gScore*G_coefficient
     
@@ -67,13 +78,18 @@ class NodeObj:
             print()
     
     def __eq__(self, other):
+
         if other == None:
+            return False
+        
+        if self.getHeuristic() != other.getHeuristic():
             return False
         
         for i in range(3):
             for j in range(3):
                 if self.matrix[i][j] != other.getMatrix()[i][j]:
                     return False
+                    
         return True
     
     def __lt__(self, other):
@@ -86,27 +102,27 @@ class NodeObj:
 
 def children(node):
     children = []
-    newNode = node.getMatrix()
+    nodeMatrix = node.getMatrix()
     for i in range(3):
         for j in range(3):
-            if newNode[i][j] == 0:
+            if nodeMatrix[i][j] == 0:
                 if i > 0:
-                    newMatrix = deepcopy(newNode)
+                    newMatrix = deepcopy(nodeMatrix)
                     newMatrix[i][j] = newMatrix[i-1][j]
                     newMatrix[i-1][j] = 0
                     children.append(NodeObj(newMatrix, node.getGScore()+1, node))
                 if i < 2:
-                    newMatrix = deepcopy(newNode)
+                    newMatrix = deepcopy(nodeMatrix)
                     newMatrix[i][j] = newMatrix[i+1][j]
                     newMatrix[i+1][j] = 0
                     children.append(NodeObj(newMatrix, node.getGScore()+1, node))
                 if j > 0:
-                    newMatrix = deepcopy(newNode)
+                    newMatrix = deepcopy(nodeMatrix)
                     newMatrix[i][j] = newMatrix[i][j-1]
                     newMatrix[i][j-1] = 0
                     children.append(NodeObj(newMatrix, node.getGScore()+1, node))
                 if j < 2:
-                    newMatrix = deepcopy(newNode)
+                    newMatrix = deepcopy(nodeMatrix)
                     newMatrix[i][j] = newMatrix[i][j+1]
                     newMatrix[i][j+1] = 0
                     children.append(NodeObj(newMatrix, node.getGScore()+1, node))                
@@ -129,13 +145,12 @@ def AStar(first):
     start = time.time()
 
     while frontier:
-    
-            #frontier.sort()
+
+        try:        
             current = heapq.heappop(frontier)
-            #current = frontier.pop(0)
             explored.append(current)
+
             print("Node explored:", len(explored), "--- Time elapsed:", round(time.time() - start, 3), end="\r")
-            #current.printNode()
             
             if current == goal:
                 goal = current
@@ -149,12 +164,26 @@ def AStar(first):
                     if child not in explored and child not in frontier:
                         heapq.heappush(frontier, child)
 
-                    # if child in forntier:
-                    #     for node in forntier:
-                    #         if node == child:
-                    #             if node.getGScore() > child.getGScore():
-                    #                 node = child
-                    #                 break
+                    # if child in explored:
+                    #     continue
+                    
+                    # try:
+                    #     index = frontier.index(child)
+                    #     if frontier[index].getGScore() < child.getGScore():
+                    #         continue
+                    # except:
+                    #     pass
+
+                    # heapq.heappush(frontier, child)
+
+        except KeyboardInterrupt:
+                print("\n\nUser stopped the program. Printing the first 10 explored nodes: \n")  
+                i = 0
+                for i in range(0,10, 1):
+                    explored.pop().printNode()
+                    print()
+                break        
+
 
     if goal.hasParent() == False:
         print("No solution found")
@@ -179,18 +208,24 @@ def AStar(first):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-m", "--manhattan", help="use manhattan distance", action="store_true")
+    parser.add_argument("-m", "--mode", help="select mode", type=str, default=None)
     parser.add_argument("-t", "--test", help="select case text", type=int, default=0)
     parser.add_argument("-hc", "--h_coefficient", help="set h coefficient", type=float, default=1)
 
     args = parser.parse_args()
 
-    if args.manhattan:
-        print("\nUSING MANHATTAN DISTANCE AS HEURISTIC VALUE")
-        MANHATTAN = True
-    else:
-        print("\nUSING WRONG POSITION HEURISTIC")
-        MANHATTAN = False
+    match args.mode:
+        case "m":
+            print("\nUSING MANHATTAN DISTANCE AS HEURISTIC VALUE")
+            MANHATTAN = True
+        case "w":
+            print("\nUSING WRONG POSITION HEURISTIC")
+            WRONG_POSITION = True
+        case "a":
+            print("\nUSING AVERAGE OF MANHATTAN DISTANCE AND WRONG POSITION HEURISTIC")
+            AVARAGE = True
+        case _:
+            MANHATTAN = True
 
     if args.h_coefficient != 1:
         print("\nUSING H COEFFICIENT:", args.h_coefficient)
