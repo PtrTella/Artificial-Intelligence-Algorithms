@@ -24,7 +24,7 @@ def wrongPosition(matrix):
     heuristic = 0
     for i in range(3):
         for j in range(3):
-            if matrix[i][j] != x % 9:
+            if matrix[i][j] != x % 9 and matrix[i][j] != 0:
                 heuristic += 1
             x += 1
     return heuristic
@@ -145,8 +145,8 @@ def AStar(first):
     start = time.time()
 
     while frontier:
-
-        try:        
+        try:       
+             
             current = heapq.heappop(frontier)
             explored.append(current)
 
@@ -159,10 +159,19 @@ def AStar(first):
                 print("Step needed to reach solution:", goal.getGScore())
                 print("=========================================\n")
                 break
+
             else:
                 for child in children(current):
                     if child not in explored and child not in frontier:
                         heapq.heappush(frontier, child)
+
+                    # if child in frontier:
+                    #     index = frontier.index(child)
+                    #     if frontier[index].getGScore() > child.getGScore():
+                    #         frontier[index] = child
+                    #         heapq.heapify(frontier)
+
+                    
 
                     # if child in explored:
                     #     continue
@@ -180,8 +189,11 @@ def AStar(first):
                 print("\n\nUser stopped the program. Printing the first 10 explored nodes: \n")  
                 i = 0
                 for i in range(0,10, 1):
-                    explored.pop().printNode()
+                    #explored.pop().printNode()+
+                    last = explored.pop()
+                    print(last.getFScore(), last.getGScore(), last.getHeuristic())
                     print()
+                print(explored.pop(len(explored)//2).getFScore())
                 break        
 
 
