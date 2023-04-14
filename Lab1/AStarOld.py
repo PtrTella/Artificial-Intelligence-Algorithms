@@ -7,6 +7,8 @@ MANHATTAN = False
 WRONG_POSITION = False
 AVARAGE = False
 
+GOAL = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
+
 H_coefficient = 1
 G_coefficient = 1
 
@@ -20,13 +22,15 @@ def calculateHeuristic(matrix):
 
 # wrong position heuristic
 def wrongPosition(matrix):
-    x = 1
+    # x = 1
     heuristic = 0
     for i in range(3):
         for j in range(3):
-            if matrix[i][j] != x % 9 and matrix[i][j] != 0:
+            if matrix[i][j] != GOAL[i][j] and matrix[i][j] != 0:
                 heuristic += 1
-            x += 1
+            # if matrix[i][j] != x % 9 and matrix[i][j] != 0:
+            #     heuristic += 1
+            # x += 1
     return heuristic
 
 # Manhattan distance
@@ -35,14 +39,14 @@ def manhattan(matrix):
     for i in range(3):
         for j in range(3):
             if matrix[i][j] != 0:
-                heuristic += abs(i - (matrix[i][j]-1)//3) + \
-                    abs(j - (matrix[i][j]-1) % 3)
+                for k in range(3):
+                    for l in range(3):
+                        if matrix[i][j] == GOAL[k][l]:
+                            heuristic += abs(i-k) + abs(j-l)
     return heuristic
 
-
-
 class NodeObj:
-    matrix = [[0 for i in range(3)] for j in range(3)]
+    matrix = []
     parentNode = None
     gScore = None
     heuristic = 0
@@ -106,38 +110,36 @@ def children(node):
     for i in range(3):
         for j in range(3):
             if nodeMatrix[i][j] == 0:
-                if i > 0:
+                if i > 0:                                        # up
                     newMatrix = deepcopy(nodeMatrix)
                     newMatrix[i][j] = newMatrix[i-1][j]
                     newMatrix[i-1][j] = 0
                     children.append(NodeObj(newMatrix, node.getGScore()+1, node))
-                if i < 2:
+                if i < 2:                                       # down
                     newMatrix = deepcopy(nodeMatrix)
                     newMatrix[i][j] = newMatrix[i+1][j]
                     newMatrix[i+1][j] = 0
                     children.append(NodeObj(newMatrix, node.getGScore()+1, node))
-                if j > 0:
+                if j > 0:                                       # left              
                     newMatrix = deepcopy(nodeMatrix)
                     newMatrix[i][j] = newMatrix[i][j-1]
                     newMatrix[i][j-1] = 0
                     children.append(NodeObj(newMatrix, node.getGScore()+1, node))
-                if j < 2:
+                if j < 2:                                       # right
                     newMatrix = deepcopy(nodeMatrix)
                     newMatrix[i][j] = newMatrix[i][j+1]
                     newMatrix[i][j+1] = 0
-                    children.append(NodeObj(newMatrix, node.getGScore()+1, node))                
+                    children.append(NodeObj(newMatrix, node.getGScore()+1, node))              
 
     return children
-
-
 
 
 def AStar(first):
 
     frontier = []
     explored = []
-    
-    goal = NodeObj([[1, 2, 3], [4, 5, 6], [7, 8, 0]])
+
+    goal = NodeObj(GOAL)
 
     heapq.heappush(frontier, first)
 
@@ -150,7 +152,7 @@ def AStar(first):
             current = heapq.heappop(frontier)
             explored.append(current)
 
-            print("Node explored:", len(explored), "--- Time elapsed:", round(time.time() - start, 3), end="\r")
+            print("Node explored:", len(explored), "--- Time elapsed:", round(time.time() - start, 3), "--- frontier:", len(frontier) ,end="\r")
             
             if current == goal:
                 goal = current
@@ -162,28 +164,8 @@ def AStar(first):
 
             else:
                 for child in children(current):
-                    if child not in explored and child not in frontier:
+                    if child not in explored:
                         heapq.heappush(frontier, child)
-
-                    # if child in frontier:
-                    #     index = frontier.index(child)
-                    #     if frontier[index].getGScore() > child.getGScore():
-                    #         frontier[index] = child
-                    #         heapq.heapify(frontier)
-
-                    
-
-                    # if child in explored:
-                    #     continue
-                    
-                    # try:
-                    #     index = frontier.index(child)
-                    #     if frontier[index].getGScore() < child.getGScore():
-                    #         continue
-                    # except:
-                    #     pass
-
-                    # heapq.heappush(frontier, child)
 
         except KeyboardInterrupt:
                 print("\n\nUser stopped the program. Printing the first 10 explored nodes: \n")  
@@ -214,6 +196,29 @@ def AStar(first):
         goal.printNode()
         print("starting node")               
     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
