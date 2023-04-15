@@ -1,4 +1,5 @@
 from queue import PriorityQueue
+import time
 
 
 mode = {
@@ -42,21 +43,36 @@ class Puzzle:
         for move, (offset, opposite) in self.possibleMoves.items():
 
             new_pos = blank_pos + offset     # Calculate the position of the tile to be moved
+            #check = blank_pos%3 + offset
+            #print(check)
 
-            # Check if the move is valid (inside vector 0-8) and if it is not the opposite of the last move
-            if 0 <= new_pos < 9 and (opposite != node.move or node.depth == 0):
+            # Check if it is not the opposite of the last move and if it is not the first move
+            if (opposite != node.move or node.depth == 0):
 
-                # Create a new state by swapping the blank tile with the tile to be moved
+                # Check if the move is valid (inside vector 0-8) and if it is not the opposite of the last move
+                if (move == "up") and (new_pos < 0):
+                    continue
+                if (move == "down") and (new_pos > 8):
+                    continue
+                if (move == "left") and (new_pos%3 == 2):
+                    continue
+                if (move == "right") and (new_pos%3 == 0):
+                    continue
+
+                #print("move: ", move)
+                        # Create a new state by swapping the blank tile with the tile to be moved
                 new_state = node.state[:]
                 new_state[blank_pos], new_state[new_pos] = new_state[new_pos], new_state[blank_pos]
 
-                # Calculate the heuristic
+                    # Calculate the heuristic
                 h = self.heuristic(new_state)
 
-                # Create a new node and add it to the children list
+                    # Create a new node and add it to the children list
                 child_node = Node(new_state, node, move,
-                                  node.depth+1, node.depth+1+h)
+                                    node.depth+1, node.depth+1+h)
                 children.append(child_node)
+
+                
         return children
 
     # select Heuristic function
@@ -118,7 +134,8 @@ if __name__ == '__main__':
     mode = mode.lower()
     mode = mode.strip()
 
+    print("\nSolving puzzle...")
+    start = time.time()
     moves = puzzle.solve()
-    
-    
-    print("Moves: ", moves, "\nPath length: " ,len(moves))
+    print("\nTime: ", time.time() - start)    
+    print("\nPath length: ", len(moves), "\n\nMoves: ", moves) 
