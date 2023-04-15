@@ -122,9 +122,17 @@ if __name__ == '__main__':
 
     # Read the initial state from the user
     initial_state = input("Enter the initial state: ")
-    initial_state = initial_state.split()
-    initial_state = [int(i) for i in initial_state]
-    puzzle = Puzzle(initial_state)
+    initial_state = initial_state.strip()
+    try:
+        initial_state = initial_state.split()
+        if len(initial_state) != 9:
+            raise ValueError
+        initial_state = [int(i) for i in initial_state]
+        puzzle = Puzzle(initial_state)        
+    except:
+        print("Invalid input")
+        exit()
+    
 
     # Read the mode from the user
     mode = input("Enter the mode (m for Manhattan distance, w for wrong position) [default w]: ")
