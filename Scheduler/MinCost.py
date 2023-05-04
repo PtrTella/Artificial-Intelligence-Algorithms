@@ -12,7 +12,7 @@ classrooms = ['TP51', 'SP34', 'K3']
 # Dictionary to store the current schedule
 schedule = {}
 
-
+#this is a comment
 
 # Function to calculate the conflict score for a class
 
