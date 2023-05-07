@@ -1,3 +1,4 @@
+import copy
 import random
 
 # List of classes to schedule
@@ -11,59 +12,73 @@ classrooms = ['TP51', 'SP34', 'K3']
 
 # Dictionary to store the current schedule
 schedule = {}
+csp = {}
 
-# Function to calculate the conflict score for a class
-def conflict_score(c):
-    time, room = schedule[c]
-    same_time_room = [x for x in schedule if schedule[x] == (time, room) and x != c]
-    same_time_first_digit = [x for x in schedule if x != c and x[:4] == c[:4] and (x != 'MT501' and c != 'MT502') and schedule[x][0] == time]
-    return len(same_time_room) + len(same_time_first_digit)
+# Function to calculate the conflict score for a class in the current schedule
+def get_conflict(c, values):
+    # c is an element of csp a dictionary of the form {class: [(time, room), (time, room), ...]}
+    time, room = values
+    #print("GET CONFLICT: ", c, time, room)
+    score = 0
+    for x in schedule:
+        if schedule[x] == (time, room) and x != c:
+            score += 1
+        if x[:4] == c[:4] and (x != 'MT501' and c != 'MT502') and schedule[x][0] == time:
+            score += 1
+    #print("BROOOO: ", schedule[c][0])
+    return score
 
 # Function to get the set of conflicted variables
-def get_conflicted_variables():
+def get_conflicted_variables(sched):
+    #print("GET CONFLICTED VARIABLES", sched)
+    #get conflicted variables for each assignment in the schedule
+    #print ("SCHEDULE: ", sched)
     conflicted = []
-    for c in classes:
-        if conflict_score(c) > 0:
+    for c in sched:
+        if get_conflict(c, sched[c]) > 0:
             conflicted.append(c)
     return conflicted
 
-def min_conflicts(csp, max_steps, current_state):
+
+def min_conflicts(csp, max_steps):
 
     # Initialize the schedule
-    for c in classes:
-        t = random.choice(times)
-        r = random.choice(classrooms)
-        schedule[c] = (t, r)
-
+    for c in csp:
+        schedule[c] = random.choice(csp[c])
+        print("\nFrom: ",csp[c][0], "\nChoose: ", schedule[c], len(schedule[c]))
+    
+    
     # Min-Conflicts algorithm
     for i in range(max_steps):
-        # Check if the current state is a solution
-        if all(conflict_score(c) == 0 for c in classes):
-            return schedule
 
+        conflicts = get_conflicted_variables(schedule)
+
+        print("CONFLICTS: ", conflicts)
+        # Check if the current state is a solution
+        if conflicts == []:
+            return schedule, i
+            
         # Pick a random conflicted variable
-        conflicted = get_conflicted_variables()
-        var = random.choice(conflicted)
+        var = random.choice(conflicts)
 
         # Find the value that minimizes conflicts for the variable
-        min_score = conflict_score(var)
-        min_values = []
+        
         for value in csp[var]:
-            current_state[var] = value
-            new_score = conflict_score(var)
-            if new_score < min_score:
-                min_score = new_score
-                min_values = [value]
-            elif new_score == min_score:
-                min_values.append(value)
+            conflict = get_conflict(var, value)
+            #print("VAR >", var ,"VALUE: ", value, "CONFLICT: ", conflict)
+            if conflict == 0:
+                schedule[var] = value
+                break
 
-        # Assign the variable to a random value that minimizes conflicts
-        new_value = random.choice(min_values)
-        current_state[var] = new_value
-        schedule[var] = (new_value[0], new_value[1])
+        # Update the schedule
+        
+
+        #current_state[var] = new_value
+        #schedule[var] = (new_value)
 
     # If a solution is not found after max_steps iterations, return failure
-    return "failure"
+    else:
+        return "failure", max_steps
 
 # Print formatted schedule
 def print_schedule(schedule):
@@ -77,16 +92,25 @@ def print_schedule(schedule):
             print()
         print()
 
-# Run the algorithm
-if __name__ == '__main__':
-    # Define the CSP
+
+# Function to create the CSP
+def csp_problem():
     csp = {}
     for c in classes:
         csp[c] = []
         for t in times:
             for r in classrooms:
                 csp[c].append((t, r))
+    return csp
+
+# Run the algorithm
+if __name__ == '__main__':
+    # Define the CSP
 
     # Set the initial state
-min_conflicts(csp,100,)
-print_schedule()
+    #min_conflicts(csp,100)
+    csp = csp_problem()
+    #print("CSP: ", csp)
+    sched, iter = min_conflicts(csp, 3000)
+    print("SCHEDULE: ", sched)
+    print_schedule(sched)
