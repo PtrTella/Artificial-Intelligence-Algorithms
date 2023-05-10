@@ -40,6 +40,6 @@ def run_min_cost(iter):
 
 if __name__ == '__main__':
     iter = int(input("How many times you want run min cost? "))
-    sched, score = run_min_cost(iter)
+    sched, score = run_min_cost(iter+1)
     print(f"\nBEST SCHEDULE FOUND (score {score})\n")
     mc.print_solution(sched)

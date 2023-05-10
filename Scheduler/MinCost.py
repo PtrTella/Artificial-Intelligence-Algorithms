@@ -30,14 +30,15 @@ def cost(solution, c, r, t):
 
 def find_new_time_and_room(solution, c):
     best_r, best_t = solution[c]
-
+    best_cost = cost(solution, c, best_r, best_t)
     # Iterate over all rooms and times to find the best one
     for r in rooms:
         for t in times:
             if r != solution[c][0] or t != solution[c][1]:
                 cost_ = cost(solution, c, r, t)
-                if cost_ < cost(solution, c, best_r, best_t):
+                if cost_ < best_cost:
                     best_r, best_t = r, t
+                    best_cost = cost_
 
     return best_r, best_t
 
@@ -68,7 +69,7 @@ def print_solution(solution):
 
 
 # Define the main loop
-def min_conflicts(max_iterations=1000):
+def min_conflicts(max_iterations=50):
     # Create a random initial solution
     solution = {c: (random.choice(rooms), random.choice(times)) for c in classes}
 
@@ -94,5 +95,8 @@ def min_conflicts(max_iterations=1000):
 
 if __name__ == '__main__':
     solution, i = min_conflicts()
-    print(f'\nFound solution after {i} iterations\n')
-    print_solution(solution)
+    if(solution == "failure"):
+        print("Could not find a solution")
+    else:
+        print(f'\nFound solution after {i} iterations\n')
+        print_solution(solution)
