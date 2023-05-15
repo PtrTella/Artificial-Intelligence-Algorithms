@@ -1,39 +1,52 @@
-public class Literal {
-    private String symbol;
-    private boolean negated;
-    
-    public Literal(String symbol, boolean negated) {
-        this.symbol = symbol;
-        this.negated = negated;
+import java.util.Objects;
+
+class Literal {
+
+    private boolean isPositive;
+    private String variable;
+
+    public Literal(boolean isPositive, String variable) {
+        this.isPositive = isPositive;
+        this.variable = variable;
     }
-    
-    public String getSymbol() {
-        return symbol;
+
+    public boolean isPositive() {
+        return isPositive;
     }
-    
-    public boolean isNegated() {
-        return negated;
+
+    public void setPositive(boolean isPositive) {
+        this.isPositive = isPositive;
     }
-    
-    public Literal negate() {
-        return new Literal(symbol, !negated);
+
+    public String getVariable() {
+        return variable;
     }
-    
+
+    public void setVariable(String variable) {
+        this.variable = variable;
+    }
+
+    public Literal getNegation() {
+        return new Literal(!isPositive, variable);
+    }
+
+    @Override
     public boolean equals(Object o) {
-        if (o instanceof Literal) {
-            Literal other = (Literal) o;
-            return symbol.equals(other.symbol) && negated == other.negated;
-        }
-        return false;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Literal literal = (Literal) o;
+        return isPositive == literal.isPositive &&
+                variable.equals(literal.variable);
     }
-    
+
+    @Override
     public int hashCode() {
-        return symbol.hashCode() + (negated ? 1 : 0);
+        return Objects.hash(isPositive, variable);
     }
-    
+
     @Override
     public String toString() {
-        return negated ? "~" + symbol : symbol;
+        return isPositive ? variable : "!" + variable;
     }
-    
+
 }

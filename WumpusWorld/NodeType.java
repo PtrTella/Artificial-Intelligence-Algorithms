@@ -1,4 +1,0 @@
-
-public enum NodeType {
-    LITERAL, NOT, AND, OR, IMPLICATION, BICONDITIONAL, OPEN, CLOSE
-}
