@@ -153,4 +153,4 @@ if __name__ == '__main__':
     start = time.time()
     moves = puzzle.solve()
     print("\nTime: ", time.time() - start)    
-    print("\nPath length: ", len(moves), "\n\nMoves: ", moves) 
+    print("\nPath length: ", len(moves), "\n\nMoves: ", moves)
