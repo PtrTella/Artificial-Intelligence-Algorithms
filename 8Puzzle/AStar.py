@@ -50,7 +50,7 @@ class Puzzle:
 
     # Generate the children nodes of the given node
     def get_children(self, node):
-        
+
         children = []
         # Find the position of the blank tile (0)
         blank_pos = node.state.index(0)
@@ -90,9 +90,9 @@ class Puzzle:
     # select Heuristic function
     def heuristic(self, state):
         if self.mode == "m":                            # mode == "MANHATTAN"               
-            return self.manhattan_distance(state)
+            return manhattan_distance(state)
         else:                                           # mode == "WRONG_POSITION"
-            return self.wrong_position(state)
+            return wrong_position(state)
         
 
     # Solve the puzzle
