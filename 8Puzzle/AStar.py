@@ -43,7 +43,7 @@ class Node:
 
 class Puzzle:
 
-    def __init__(self, initial_state, mode="w"):
+    def __init__(self, initial_state, mode="m"):
         self.mode = mode
         self.start_node = Node(initial_state, None, None, 0, 0)
         self.goal_state = [1, 2, 3, 4, 5, 6, 7, 8, 0]
@@ -89,10 +89,10 @@ class Puzzle:
 
     # select Heuristic function
     def heuristic(self, state):
-        if self.mode == "m":                            # mode == "MANHATTAN"               
-            return manhattan_distance(state)
-        else:                                           # mode == "WRONG_POSITION"
+        if self.mode == "w":                                     
             return wrong_position(state)
+        else:                                           
+            return manhattan_distance(state)
         
 
     # Solve the puzzle
@@ -144,7 +144,7 @@ if __name__ == '__main__':
     
 
     # Read the mode from the user
-    mode = input("Enter the mode (m for Manhattan distance, w for wrong position) [default w]: ")
+    mode = input("Enter the mode (m for Manhattan distance, w for wrong position) [default m]: ")
     mode = mode.lower().strip()
 
     puzzle = Puzzle(initial_state, mode)        
