@@ -23,6 +23,7 @@ def manhattan_distance(state):
 def wrong_position(state):
     distance = 0
     for i, tile in enumerate(state):
+        # Not consider the blank tile (0) because nomore optimistic distance
         if tile != 0 and tile != i+1:
             distance += 1
     return distance
@@ -118,6 +119,16 @@ class Puzzle:
                 if tuple(child.state) not in visited:
                     pq.put(child)
         return [("No solution found")]
+    
+# Count the number of inversions in the initial state to check if the puzzle is solvable
+def getInvCount(arr):
+    inv_count = 0
+    empty_value = -1
+    for i in range(0, 9):
+        for j in range(i + 1, 9):
+            if arr[j] != empty_value and arr[i] != empty_value and arr[i] > arr[j]:
+                inv_count += 1
+    return inv_count
 
 
 if __name__ == '__main__':
@@ -138,10 +149,12 @@ if __name__ == '__main__':
                 else :
                     check.remove(int(i))
         initial_state = [int(i) for i in initial_state]
+        if(getInvCount(initial_state)%2 != 0):
+            print("No solvable puzzle")
+            raise ValueError
     except:
         print("Invalid input")
         exit()
-    
 
     # Read the mode from the user
     mode = input("Enter the mode (m for Manhattan distance, w for wrong position) [default m]: ")
