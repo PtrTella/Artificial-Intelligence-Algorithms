@@ -1,31 +1,37 @@
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 public class ResolutionSolver {
 
+    private List<Clause> KB = new ArrayList<>();
+
     public static void main(String[] args) {
 
+        
         // KB = {¬sun ∨ ¬money ∨ ice, ¬money ∨ ice ∨ movie, ¬movie ∨ money, ¬movie ∨ ¬ice,   
         //       movie V sun V money V cry}
         Clause A = new Clause(new Literal(false, "sun"), new Literal(false, "money"), new Literal(true, "ice"));
         Clause B = new Clause(new Literal(false, "money"), new Literal(true, "ice"), new Literal(true, "movie"));
         Clause C = new Clause(new Literal(false, "movie"), new Literal(true, "money"));
         Clause D = new Clause(new Literal(false, "movie"), new Literal(false, "ice"));
-        Clause E = new Clause(new Literal(true, "movie"), new Literal(true, "sun"), new Literal(true, "money"), new Literal(true, "cry"));
+        Clause E = new Clause(new Literal(true, "sun"), new Literal(true, "money"), new Literal(true, "cry"));
 
-        // KB = {¬movie}
-        Clause PROVE = new Clause(new Literal(false, "ice"));
-        Clause PROVE2 = new Clause(new Literal(true, "movie"));
+        // Clause to prove by adding it to KB = {movie}
+        Clause PROVE = new Clause(new Literal(true, "movie"));
 
-        System.out.println("A: " + A);
-        Clause resolvent = resolution(A, A);
-        System.out.println("A" + A);
-        System.out.println("Resolution: " + resolvent);
+        
+        
         List<Clause> KB = new ArrayList<>();
-        KB.addAll(List.of(A, B, C, D, E, PROVE));
-        List<Clause> sol = solver(KB);
-        System.out.println("Solver: " + sol);
+        KB.addAll(List.of(A,B, C, D, E, PROVE));
+        ResolutionSolver solver = new ResolutionSolver(KB);
+
+        System.out.println("Input KB: " + KB + "\n");
+        List<Clause> sol = solver.solver();
+        System.out.println("\nSolution: " + sol);
+    }
+
+    public ResolutionSolver(List<Clause> KB) {
+        this.KB.addAll(KB);
     }
     
     /**
@@ -35,7 +41,7 @@ public class ResolutionSolver {
      * @param B The second clause.
      * @return The resolvent of the two clauses.
      */
-    public static Clause resolution(Clause A, Clause B) {
+    public Clause resolution(Clause A, Clause B) {
 
         List<Literal> matchinList = new ArrayList<>();
         matchinList = A.getNegatedMatching(B);
@@ -46,23 +52,21 @@ public class ResolutionSolver {
         }
     
         // Pick random form matching list
-        Random ran = new Random();
-        Literal a = matchinList.get(ran.nextInt(matchinList.size()));
-
-        Clause Acopy = new Clause(A.getLiterals());
-        Clause Bcopy = new Clause(B.getLiterals());
-
-        Acopy.removeLiteral(a);
-        Bcopy.removeLiteral(a.getNegation());
-
+        // Not usefull in this case because we have only one literal in the list, And it has to be like that.
+        Literal a = matchinList.get(0);
 
         // Create the resolvent.
-        Clause resolvent = new Clause(Acopy, Bcopy);
+        Clause resolvent = new Clause();
+        resolvent.addAll(A.getLiterals());
+        resolvent.addAll(B.getLiterals());
+        
+        // Remove the literals that match.
+        resolvent.remove(a);
+        resolvent.remove(a.getNegation());
     
 
         // Remove duplicates from the resolvent.
         resolvent.removeDuplicates();
-        resolvent.getPositiveLiterals().removeIf(n -> resolvent.getNegativeLiterals().contains(n));
 
         return resolvent;
     }
@@ -74,13 +78,29 @@ public class ResolutionSolver {
      * @param clauses The set of clauses.
      * @return A list of the resolvents of the clauses.
      */
-    public static List<Clause> solver(List<Clause> KB) {
+    public  List<Clause> solver() {
+
+        // check not redaundancy in KB
+        System.out.println("CHECK REDAUNDANCY");
+        List<Clause> removable = new ArrayList<>();
+        for (Clause Cl1 : KB) {
+            for (Clause Cl2 : KB) {
+                if(KB.indexOf(Cl1) != KB.indexOf(Cl2)){
+                    if (Cl1.isLowerOrEqual(Cl2)) {
+                        removable.add(Cl2);
+                    }
+                }
+            }
+        }
+        KB.removeAll(removable);
+
         
-        System.out.println("SOLVER" + KB);
+        System.out.println("KB: " + KB);
         // Initialize the list of resolvents.
         List<Clause> KBf = new ArrayList<>();
         List<Clause> S = new ArrayList<>();
-        int i = 0;
+
+
         
         do {
             //System.out.println("Iteration: " + i++);
@@ -91,14 +111,14 @@ public class ResolutionSolver {
 
             // Loop through al l the clauses.
             for (Clause A : KB) {
-                System.out.println("-------------------");
                 for (Clause B : KB) {
-                    System.out.println("A: " + A + "B: " + B);
+                    //System.out.println("A: " + A + " B: " + B);
                     
                     // Check if the clauses are the same.
-                    if (!A.equals(B)) {
+                    if (KB.indexOf(A) < KB.indexOf(B)){
                         // Resolve the clauses.
                         Clause C = resolution(A, B);
+                        //System.out.println("C: " + C);
                         // Check if the resolvent is null.
                         if (C != null) {
                             S.add(C);
@@ -107,11 +127,10 @@ public class ResolutionSolver {
                 }
             }
 
-            //System.out.println("S: " + S);
+            System.out.println("S: " + S);
             
             // Check if the resolvent is empty.
             if (S.isEmpty()) {
-                System.out.println("Empty");
                 return KB;
             }
             
@@ -119,10 +138,10 @@ public class ResolutionSolver {
             for (Clause D : S) {
                 KB = incorporate(KB, D);
             }
+            System.out.println("KB: " + KB);
 
-        } while (KB == KBf);
+        } while(KB == KBf);
 
-        System.out.println("SOLVER");
         return KB;
 
     }
@@ -143,17 +162,18 @@ public class ResolutionSolver {
             }
         }
 
+        List<Clause> removable = new ArrayList<>();
+
         for (Clause B : KB) {
             // Check if the clauses are the same.
             if (A.isLowerOrEqual(B)) {
-                System.out.println("Remove: " + B + "From: " + KB);
-
-                KB.remove(B);
-                System.out.println("Remove: " + KB);
+                removable.add(B);
             }
         }
 
+        KB.removeAll(removable);
         KB.add(A);
+        
         return KB;
     }
 }

@@ -2,10 +2,14 @@
 public class MyAgent implements Agent
 {
     private World w;
+    private ResolutionSolver re;
     
     public MyAgent(World world)
     {
         w = world;
+        w.doAction(World.A_MOVE_UP);
+        
+
     }
     
  
@@ -16,6 +20,8 @@ public class MyAgent implements Agent
         //Location of the player
         int cX = w.getPlayerX();
         int cY = w.getPlayerY();
+
+        w.doAction(World.A_MOVE_UP);
         
         //Basic action:
         //Grab Gold if we can.

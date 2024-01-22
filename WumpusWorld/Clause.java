@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
 
-class Clause extends ArrayList<Literal>{
+class Clause extends ArrayList<Literal> {
 
     private List<Literal> literals = new ArrayList<>();
 
@@ -35,33 +35,7 @@ class Clause extends ArrayList<Literal>{
         return literals.indexOf(literal);
     }
 
-    public List<Literal> getPositiveLiterals() {
-        List<Literal> positiveLiterals = new ArrayList<>();
-        for (Literal literal : literals) {
-            if (literal.isPositive()) {
-                positiveLiterals.add(literal);
-            }
-        }
-        return positiveLiterals;
-    }
-
-    public List<Literal> getNegation(Clause B){
-        B.getLiterals();
-        // TODO
-        return null;
-    }
-
-    public List<Literal> getNegativeLiterals() {
-        List<Literal> negativeLiterals = new ArrayList<>();
-        for (Literal literal : literals) {
-            if (!literal.isPositive()) {
-                negativeLiterals.add(literal);
-            }
-        }
-        return negativeLiterals;
-    }
-
-    public List<Literal> getMatching(Clause B){
+    public List<Literal> getMatching(Clause B) {
         List<Literal> matchingLiterals = new ArrayList<>();
         for (Literal literal : literals) {
             if (B.containsLiteral(literal)) {
@@ -71,7 +45,7 @@ class Clause extends ArrayList<Literal>{
         return matchingLiterals;
     }
 
-    public List<Literal> getNegatedMatching(Clause B){
+    public List<Literal> getNegatedMatching(Clause B) {
         List<Literal> matchingLiterals = new ArrayList<>();
         for (Literal literal : literals) {
             if (B.containsLiteral(literal.getNegation())) {
@@ -94,16 +68,6 @@ class Clause extends ArrayList<Literal>{
         return false;
     }
 
-    public boolean isEmpty() {
-        return false;
-    }
-
-    public void removeLiteral(Literal literal) {
-        if (containsLiteral(literal)){
-            literals.remove(literal);
-        }
-    }
-
     public void removeDuplicates() {
         List<Literal> newLiterals = new ArrayList<>();
         for (Literal literal : literals) {
@@ -113,6 +77,20 @@ class Clause extends ArrayList<Literal>{
         }
         literals = newLiterals;
     }
+    
+    public boolean isLowerOrEqual(Clause B) {
+        for (Literal literal : literals) {
+            if (!B.containsLiteral(literal)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean remove(Object literal) {
+        return literals.remove(literal);
+    }
 
     @Override
     public String toString() {
@@ -121,7 +99,7 @@ class Clause extends ArrayList<Literal>{
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof Clause || ((Clause) obj).getLiterals().size() != literals.size()) {
+        if (obj instanceof Clause && ((Clause) obj).getLiterals().size() == literals.size()) {
             Clause clause = (Clause) obj;
             for (Literal literal : literals) {
                 if (!clause.containsLiteral(literal)) {
@@ -132,14 +110,4 @@ class Clause extends ArrayList<Literal>{
         }
         return false;
     }
-
-    public boolean isLowerOrEqual(Clause B) {
-        for (Literal literal : literals) {
-            if (!B.containsLiteral(literal)) {
-                return false;
-            }
-        }
-        return true;
-    }
 }
-
